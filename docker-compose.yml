@@ -1,0 +1,14 @@
+services:
+  web-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: TreeShop
+    ports:
+      - "8080:8080"
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=host.docker.internal,1500;Database=ShopDB;User Id=sa;Password=@Mahiru09092004;TrustServerCertificate=True;Encrypt=False;
+      - JwtSettings__SecretKey=iemduelqfopeiovjovmedocmelqnvvie
+      - JwtSettings__ExpTime=60
+      - JwtSettings__Issuer=tree-shop
+      - JwtSettings__Audience=tree-shop-users
