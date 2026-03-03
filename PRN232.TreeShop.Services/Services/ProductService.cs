@@ -40,7 +40,8 @@ namespace PRN232.LaptopShop.Services.Services
                     StockQuantity = request.StockQuantity,
                     Status = true,
                     CategoryId = request.CategoryId,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    ImageUrl = request.ImageUrl
                 };
 
                 await _unitOfWork.ProductRepo.Add(newProduct);
@@ -54,7 +55,8 @@ namespace PRN232.LaptopShop.Services.Services
                     StockQuantity = newProduct.StockQuantity,
                     CreatedAt = newProduct.CreatedAt,
                     CategoryId = newProduct.CategoryId,
-                    CategoryName = category.CategoryName
+                    CategoryName = category.CategoryName,
+                    ImageUrl = newProduct.ImageUrl
                 };
 
                 return Result<ProductDetailResponse>.Success(response, 201);
@@ -86,7 +88,8 @@ namespace PRN232.LaptopShop.Services.Services
                     StockQuantity = product.StockQuantity,
                     CreatedAt = product.CreatedAt,
                     CategoryId = product.CategoryId,
-                    CategoryName = product.Category.CategoryName
+                    CategoryName = product.Category.CategoryName,
+                    ImageUrl = product.ImageUrl
                 };
 
                 return Result<ProductDetailResponse>.Success(response);
@@ -120,6 +123,7 @@ namespace PRN232.LaptopShop.Services.Services
                 product.Price = request.Price;
                 product.StockQuantity = request.StockQuantity;
                 product.CategoryId = request.CategoryId;
+                product.ImageUrl = request.ImageUrl;
 
                 _unitOfWork.ProductRepo.Update(product);
                 await _unitOfWork.SaveChangesAsync();
@@ -132,7 +136,8 @@ namespace PRN232.LaptopShop.Services.Services
                     StockQuantity = product.StockQuantity,
                     CreatedAt = product.CreatedAt,
                     CategoryId = product.CategoryId,
-                    CategoryName = product.Category.CategoryName
+                    CategoryName = product.Category.CategoryName,
+                    ImageUrl = product.ImageUrl
                 };
 
                 return Result<ProductDetailResponse>.Success(response);

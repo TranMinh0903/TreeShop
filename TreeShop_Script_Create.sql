@@ -64,6 +64,7 @@ CREATE TABLE Product (
 	[Status] BIT, 
     CreatedBy      INT NULL,
     CreatedAt      DATETIME DEFAULT GETDATE(),
+    ImageUrl       NVARCHAR(500) NULL,       -- 2026-03-03: Thêm URL hình ảnh sản phẩm (Cloudinary)
 
    CategoryId INT NOT NULL,
        CONSTRAINT FK_Category_Product

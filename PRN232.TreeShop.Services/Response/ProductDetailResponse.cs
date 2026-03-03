@@ -12,5 +12,6 @@ namespace PRN232.LaptopShop.Services.Response
         public DateTime? CreatedAt { get; set; }
         public int CategoryId { get; set; }
         public string CategoryName { get; set; } = null!;
+        public string? ImageUrl { get; set; }
     }
 }
