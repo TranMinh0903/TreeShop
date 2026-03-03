@@ -5,9 +5,9 @@ services:
       dockerfile: Dockerfile
     container_name: TreeShop
     ports:
-      - "8080:8080"
+      - "9090:8080"
     environment:
-      - ConnectionStrings__DefaultConnection=Server=host.docker.internal,1500;Database=ShopDB;User Id=sa;Password=@Mahiru09092004;TrustServerCertificate=True;Encrypt=False;
+      - ConnectionStrings__DefaultConnection=Server=host.docker.internal,1433;Database=ShopDB;User Id=sa;Password=1234567890;TrustServerCertificate=True;Encrypt=False;
       - JwtSettings__SecretKey=iemduelqfopeiovjovmedocmelqnvvie
       - JwtSettings__ExpTime=60
       - JwtSettings__Issuer=tree-shop
