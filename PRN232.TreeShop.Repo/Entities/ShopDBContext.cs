@@ -21,6 +21,10 @@ public partial class ShopDBContext : DbContext
 
     public virtual DbSet<Product> Products { get; set; }
 
+    public virtual DbSet<Order> Orders { get; set; }
+
+    public virtual DbSet<OrderDetail> OrderDetails { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -75,6 +79,68 @@ public partial class ShopDBContext : DbContext
                 .HasForeignKey(d => d.CategoryId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Category_Product");
+        });
+
+        modelBuilder.Entity<Order>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Order__3214EC07");
+
+            entity.ToTable("Order");
+
+            entity.Property(e => e.ReceiverName).HasMaxLength(200);
+            entity.Property(e => e.ReceiverPhone).HasMaxLength(20);
+            entity.Property(e => e.ShippingAddress).HasMaxLength(500);
+            entity.Property(e => e.ShippingMethod)
+                .HasMaxLength(50)
+                .HasDefaultValue("Standard");
+            entity.Property(e => e.ShippingFee)
+                .HasColumnType("decimal(18, 2)")
+                .HasDefaultValue(0m);
+            entity.Property(e => e.TotalPrice).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.Status)
+                .HasMaxLength(50)
+                .HasDefaultValue("Pending");
+            entity.Property(e => e.PaymentMethod)
+                .HasMaxLength(50)
+                .HasDefaultValue("COD");
+            entity.Property(e => e.DeliveryImageUrl).HasMaxLength(500);
+            entity.Property(e => e.DeliveryTimestamp).HasColumnType("datetime");
+            entity.Property(e => e.Note).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+
+            entity.HasOne(d => d.User).WithMany()
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Order_User");
+
+            entity.HasOne(d => d.Shipper).WithMany()
+                .HasForeignKey(d => d.ShipperId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Order_Shipper");
+        });
+
+        modelBuilder.Entity<OrderDetail>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__OrderDetail__3214EC07");
+
+            entity.ToTable("OrderDetail");
+
+            entity.Property(e => e.ProductName).HasMaxLength(200);
+            entity.Property(e => e.Price).HasColumnType("decimal(18, 2)");
+            entity.Property(e => e.ImageUrl).HasMaxLength(500);
+
+            entity.HasOne(d => d.Order).WithMany(p => p.OrderDetails)
+                .HasForeignKey(d => d.OrderId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_OrderDetail_Order");
+
+            entity.HasOne(d => d.Product).WithMany()
+                .HasForeignKey(d => d.ProductId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_OrderDetail_Product");
         });
 
         OnModelCreatingPartial(modelBuilder);

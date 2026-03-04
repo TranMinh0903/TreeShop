@@ -116,6 +116,8 @@ builder.Services.AddScoped<UnitOfWork>();
 builder.Services.AddScoped<AccountRepo>();
 builder.Services.AddScoped<ProductRepo>();
 builder.Services.AddScoped<CategoryRepo>();
+builder.Services.AddScoped<OrderRepo>();
+builder.Services.AddScoped<OrderDetailRepo>();
 
 // DI services
 builder.Services.AddScoped<IPasswordService, PasswordService>();
@@ -123,6 +125,7 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<AuthenticationService>();
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<CategoryService>();
+builder.Services.AddScoped<OrderService>();
 
 var app = builder.Build();
 

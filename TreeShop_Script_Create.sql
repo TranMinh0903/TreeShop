@@ -73,3 +73,53 @@ CREATE TABLE Product (
 );
 GO
 
+
+-- ============================================
+-- 4. Order Table (2026-03-04: Order System)
+-- Theo yêu cầu đề bài: ID, UserID, TotalPrice, Status, ShippingAddress, shipper_id, delivery_image_url, delivery_timestamp
+-- ============================================
+
+CREATE TABLE [Order] (
+    Id                  INT IDENTITY(1,1) PRIMARY KEY,
+    UserId              INT NOT NULL,                          -- FK → Account (Customer)
+    ShipperId           INT NULL,                              -- FK → Account (Shipper, assigned by Admin)
+    ReceiverName        NVARCHAR(200) NOT NULL,                -- Tên người nhận
+    ReceiverPhone       NVARCHAR(20) NOT NULL,                 -- SĐT người nhận
+    ShippingAddress     NVARCHAR(500) NOT NULL,                -- Địa chỉ giao hàng
+    ShippingMethod      NVARCHAR(50) DEFAULT 'Standard',       -- 'Standard' / 'Express'
+    ShippingFee         DECIMAL(18,2) DEFAULT 0,               -- Phí ship
+    TotalPrice          DECIMAL(18,2) NOT NULL,                -- Tổng tiền (items + ship)
+    Status              NVARCHAR(50) DEFAULT 'Pending',        -- Pending/Confirmed/Shipping/Delivered/Completed/Cancelled
+    PaymentMethod       NVARCHAR(50) DEFAULT 'COD',            -- COD / BankTransfer
+    DeliveryImageUrl    NVARCHAR(500) NULL,                    -- Ảnh chứng minh giao hàng (Proof of Delivery)
+    DeliveryTimestamp   DATETIME NULL,                         -- Thời điểm giao hàng hoàn tất
+    Note                NVARCHAR(500) NULL,                    -- Ghi chú của khách
+    CreatedAt           DATETIME DEFAULT GETDATE(),
+    UpdatedAt           DATETIME NULL,
+
+    CONSTRAINT FK_Order_User FOREIGN KEY (UserId) REFERENCES Account(Id),
+    CONSTRAINT FK_Order_Shipper FOREIGN KEY (ShipperId) REFERENCES Account(Id)
+);
+GO
+
+
+-- ============================================
+-- 5. OrderDetail Table (2026-03-04: Order System)
+-- Theo yêu cầu đề bài: Id, OrderId, price, quantity
+-- Thêm ProductId, ProductName, ImageUrl để snapshot thông tin sản phẩm tại thời điểm đặt
+-- ============================================
+
+CREATE TABLE OrderDetail (
+    Id          INT IDENTITY(1,1) PRIMARY KEY,
+    OrderId     INT NOT NULL,                              -- FK → Order
+    ProductId   INT NOT NULL,                              -- FK → Product
+    ProductName NVARCHAR(200) NOT NULL,                    -- Snapshot tên SP (phòng khi SP bị sửa/xóa)
+    Price       DECIMAL(18,2) NOT NULL,                    -- Snapshot giá tại thời điểm đặt
+    Quantity    INT NOT NULL,
+    ImageUrl    NVARCHAR(500) NULL,                        -- Snapshot ảnh SP
+
+    CONSTRAINT FK_OrderDetail_Order FOREIGN KEY (OrderId) REFERENCES [Order](Id),
+    CONSTRAINT FK_OrderDetail_Product FOREIGN KEY (ProductId) REFERENCES Product(Id)
+);
+GO
+
