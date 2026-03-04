@@ -142,4 +142,55 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Seed default Admin & Shipper accounts on startup
+try
+{
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<ShopDBContext>();
+    var passwordService = scope.ServiceProvider.GetRequiredService<IPasswordService>();
+
+    // Seed Admin — update existing 'admin' account or create new one
+    var adminAccount = context.Accounts.FirstOrDefault(a => a.Username == "admin");
+    if (adminAccount != null)
+    {
+        if (adminAccount.Role != "Admin") adminAccount.Role = "Admin";
+    }
+    else
+    {
+        context.Accounts.Add(new Account
+        {
+            Username = "admin",
+            PasswordHash = passwordService.HashPassword("admin123"),
+            Email = "admin@treeshop.com",
+            Role = "Admin",
+            CreatedAt = DateTime.UtcNow
+        });
+    }
+
+    // Seed Shipper — update existing 'shipper' account or create new one
+    var shipperAccount = context.Accounts.FirstOrDefault(a => a.Username == "shipper");
+    if (shipperAccount != null)
+    {
+        if (shipperAccount.Role != "Shipper") shipperAccount.Role = "Shipper";
+    }
+    else
+    {
+        context.Accounts.Add(new Account
+        {
+            Username = "shipper",
+            PasswordHash = passwordService.HashPassword("shipper123"),
+            Email = "shipper@treeshop.com",
+            Role = "Shipper",
+            CreatedAt = DateTime.UtcNow
+        });
+    }
+
+    context.SaveChanges();
+    Console.WriteLine("=== SEED: Admin and Shipper accounts ready ===");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"=== SEED WARNING: {ex.Message} ===");
+}
+
 app.Run();

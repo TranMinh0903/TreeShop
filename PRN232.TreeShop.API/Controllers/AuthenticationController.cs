@@ -26,7 +26,18 @@ namespace PRN232.LaptopShop.API.Controllers
             {
                 return StatusCode(result.StatusCode, ApiResponse<string>.Fail(message: result.Errors!));
             }
-            return StatusCode(result.StatusCode, ApiResponse<LoginResponse>.Ok(result.Value!, "Login successful"));
+            var loginData = result.Value!;
+            return Ok(new
+            {
+                isSuccess = true,
+                message = "Login successful",
+                data = new
+                {
+                    token = loginData.Token,
+                    role = loginData.Role
+                },
+                errors = (string?)null
+            });
         }
 
 

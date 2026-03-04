@@ -43,7 +43,14 @@ namespace PRN232.LaptopShop.Services.Services
             }
 
             var token = _tokenService.CreateAccessToken(user);
-            return Result<LoginResponse>.Success(new LoginResponse { Token = token });
+            var role = user.Role ?? AppRole.User;
+            _logger.LogWarning("=== LOGIN DEBUG: user={Username}, role_from_db={DbRole}, resolved_role={Role} ===", 
+                user.Username, user.Role, role);
+            return Result<LoginResponse>.Success(new LoginResponse
+            {
+                Token = token,
+                Role = role
+            });
         }
 
         public async Task<Result<RegisterResponse>> Register(RegisterRequest registerRequest)
@@ -68,6 +75,7 @@ namespace PRN232.LaptopShop.Services.Services
                 Username = registerRequest.Username,
                 PasswordHash = _passwordService.HashPassword(registerRequest.Password),
                 Email = registerRequest.Email,
+                Role = AppRole.User,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -79,7 +87,8 @@ namespace PRN232.LaptopShop.Services.Services
                 {
                     Id = newUser.Id,
                     Username = newUser.Username,
-                    Email = newUser.Email
+                    Email = newUser.Email,
+                    Role = newUser.Role ?? AppRole.User
                 };
                 return Result<RegisterResponse>.Success(response, 201);
             }

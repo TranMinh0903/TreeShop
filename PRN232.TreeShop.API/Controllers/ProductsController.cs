@@ -10,7 +10,6 @@ namespace PRN232.LaptopShop.API.Controllers
 {
     [Route("api/v1/products")]
     [ApiController]
-    //[Authorize]
     public class ProductsController : ControllerBase
     {
         private readonly ProductService _productService;
@@ -21,6 +20,7 @@ namespace PRN232.LaptopShop.API.Controllers
         }
 
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> CreateProduct([FromBody] ProductRequest request)
         {
@@ -67,6 +67,7 @@ namespace PRN232.LaptopShop.API.Controllers
         }
 
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProduct([FromRoute] int id, [FromBody] ProductRequest request)
         {
@@ -79,6 +80,7 @@ namespace PRN232.LaptopShop.API.Controllers
         }
 
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct([FromRoute] int id)
         {

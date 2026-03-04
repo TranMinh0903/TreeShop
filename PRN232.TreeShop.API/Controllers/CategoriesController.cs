@@ -10,7 +10,6 @@ namespace PRN232.LaptopShop.API.Controllers
 {
     [Route("api/v1/categories")]
     [ApiController]
-    //[Authorize]
     public class CategoriesController : ControllerBase
     {
         private readonly CategoryService _categoryService;
@@ -21,6 +20,7 @@ namespace PRN232.LaptopShop.API.Controllers
         }
 
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> CreateCategory([FromBody] CategoryRequest request)
         {
@@ -62,6 +62,7 @@ namespace PRN232.LaptopShop.API.Controllers
         }
 
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCategory([FromRoute] int id, [FromBody] CategoryRequest request)
         {
@@ -74,6 +75,7 @@ namespace PRN232.LaptopShop.API.Controllers
         }
 
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCategory([FromRoute] int id)
         {
