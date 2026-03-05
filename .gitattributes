@@ -1,0 +1,2 @@
+# Ensure shell scripts use LF line endings for Linux containers
+init-db/*.sh text eol=lf

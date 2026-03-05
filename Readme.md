@@ -48,15 +48,16 @@ graph TD
     B[React App] --> C[TreeShop API]
     C --> D[SQL Server Database]
     E[Docker Compose] --> C
+    E --> D
 ```
 
 ### Các thành phần:
 
 - **TreeShop API**: Web API được containerized với Docker
-- **SQL Server**: Database do bạn tự quản lý (không được containerized)
+- **SQL Server**: Database được containerized cùng Docker Compose (tự động tạo DB khi chạy lần đầu)
 - **Client Apps**: Flutter mobile app và React web app
 
-> 💡 **Lưu ý**: Docker Compose chỉ quản lý Web API container. SQL Server cần được cài đặt và cấu hình riêng.
+> 💡 **Lưu ý**: Docker Compose quản lý cả Web API container **và** SQL Server container. Bạn **KHÔNG cần** cài SQL Server riêng.
 
 ---
 
@@ -79,7 +80,9 @@ graph TD
 
 - 🐳 **Docker Desktop** - [Download](https://www.docker.com/products/docker-desktop/)
 - 📁 **Git** - [Download](https://git-scm.com/)
-- 🔧 **SQL Server Management Studio** (Optional) - [Download](https://docs.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms)
+- 🔧 **SQL Server Management Studio** (Optional - để xem/quản lý DB) - [Download](https://docs.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms)
+
+> ⚠️ **KHÔNG cần** cài SQL Server. SQL Server sẽ chạy trong Docker container.
 
 ### Kiểm tra cài đặt:
 
@@ -103,25 +106,36 @@ cd TreeShop
 ### 2. Chạy với Docker Compose
 
 ```bash
-# Build và chạy tất cả services
+# Build và chạy tất cả services (SQL Server + API)
 docker compose up --build
 
 # Chạy ở chế độ detached (background)
 docker compose up -d --build
 ```
 
+> 🎉 **Chỉ cần lệnh trên!** SQL Server sẽ tự khởi động, tạo database `ShopDB`, và tạo tất cả bảng tự động.
+
 ### 3. Kiểm tra containers đang chạy
 
 ```bash
 docker ps
+# Phải thấy 2 containers: TreeShop (API) + TreeShop-SqlServer (DB)
 ```
 
-### 4. Dừng services
+### 4. Truy cập
+
+| Service       | URL                              |
+| ------------- | -------------------------------- |
+| **Swagger UI** | http://localhost:9090/swagger    |
+| **API Base**   | http://localhost:9090/api/v1     |
+| **SQL Server** | `localhost,1433` (sa / TreeShop@123) |
+
+### 5. Dừng services
 
 ```bash
 docker compose down
 
-# Dừng và xóa volumes (reset database)
+# Dừng và xóa volumes (⚠️ XÓA TOÀN BỘ DATA trong DB)
 docker compose down -v
 ```
 
@@ -129,47 +143,36 @@ docker compose down -v
 
 ## 🗄 Cấu hình cơ sở dữ liệu
 
-> ⚠️ **QUAN TRỌNG**: Bạn cần có SQL Server riêng và tự cấu hình connection string trong `docker-compose.yml`. Project chỉ cung cấp script database, không bao gồm SQL Server container.
+> ✅ Database **tự động được tạo** khi chạy `docker compose up` lần đầu. Bạn **KHÔNG cần** làm gì thêm.
 
-### Yêu cầu trước khi chạy:
+### Cấu trúc Docker:
 
-1. **Có sẵn SQL Server** (Local hoặc Remote)
-2. **Chạy script database** được cung cấp trong project
-3. **Cập nhật connection string** trong `docker-compose.yml`
+```
+TreeShop/
+├── docker-compose.yml          # Quản lý cả API + SQL Server
+├── Dockerfile                  # Build .NET API
+├── init-db/
+│   ├── entrypoint.sh          # Script khởi động SQL Server + chạy init
+│   └── setup.sql              # Tạo DB và tables (idempotent)
+└── TreeShop_Script_Create.sql  # Script gốc (tham khảo)
+```
 
-### Các bước cấu hình:
+### Kết nối tới DB từ SSMS/Azure Data Studio:
 
-#### Bước 1: Chuẩn bị SQL Server
+| Field    | Value         |
+| -------- | ------------- |
+| Server   | `localhost,1433` |
+| Login    | `sa`          |
+| Password | `TreeShop@123`  |
 
-- Cài đặt SQL Server (hoặc sử dụng SQL Server có sẵn)
-- Tạo database cho project
-- Chạy script database được cung cấp
+### Muốn dùng SQL Server riêng (không dùng Docker)?
 
-#### Bước 2: Cấu hình docker-compose.yml
-
-Sửa connection string trong file `docker-compose.yml`:
+Sửa connection string trong `docker-compose.yml`:
 
 ```yaml
 environment:
-  - ConnectionStrings__DefaultConnection=Server=YOUR_SERVER;Database=YOUR_DATABASE;User Id=YOUR_USERNAME;Password=YOUR_PASSWORD;TrustServerCertificate=True;Encrypt=False;
+  - ConnectionStrings__DefaultConnection=Server=host.docker.internal,1433;Database=ShopDB;User Id=sa;Password=YOUR_PASSWORD;TrustServerCertificate=True;Encrypt=False;
 ```
-
-**Ví dụ cấu hình:**
-
-| Scenario               | Connection String Example                                                                                                            |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| **Local SQL Server**   | `Server=host.docker.internal;Database=TreeShopDB;User Id=sa;Password=YourPassword123!;TrustServerCertificate=True;Encrypt=False;`    |
-| **Remote SQL Server**  | `Server=192.168.1.100,1433;Database=TreeShopDB;User Id=sqluser;Password=YourPassword123!;TrustServerCertificate=True;Encrypt=False;` |
-| **Azure SQL Database** | `Server=yourserver.database.windows.net;Database=TreeShopDB;User Id=yourusername;Password=YourPassword123!;Encrypt=True;`            |
-
-### Công cụ kết nối database:
-
-- **SQL Server Management Studio** (SSMS)
-- **Azure Data Studio**
-- **DBeaver**
-- **VS Code SQL Server Extension**
-
-> 💡 **Lưu ý**: Project chỉ cung cấp API code và database scripts. Bạn cần tự quản lý SQL Server instance.
 
 ---
 
@@ -178,7 +181,7 @@ environment:
 ### Base URL
 
 ```
-http://localhost:8080/api/v1
+http://localhost:9090/api/v1
 ```
 
 ### Swagger UI
@@ -186,7 +189,7 @@ http://localhost:8080/api/v1
 Truy cập Swagger Documentation tại:
 
 ```
-http://localhost:8080/swagger
+http://localhost:9090/swagger
 ```
 
 **Tính năng có sẵn:**
@@ -199,7 +202,7 @@ http://localhost:8080/swagger
 ### Sample API Call
 
 ```bash
-curl -X GET "http://localhost:8080/api/v1/products" \
+curl -X GET "http://localhost:9090/api/v1/products" \
   -H "accept: application/json"
 ```
 
@@ -223,10 +226,10 @@ ApiClient.get("/products");
 
 ```dart
 class AppConfig {
-  static const String baseUrl = "http://10.0.2.2:8080/api/v1";
+  static const String baseUrl = "http://10.0.2.2:9090/api/v1";
 
   // Cho thiết bị thật, dùng IP máy:
-  // static const String baseUrl = "http://192.168.1.5:8080/api/v1";
+  // static const String baseUrl = "http://192.168.1.5:9090/api/v1";
 }
 ```
 
@@ -306,7 +309,7 @@ try {
 import axios from "axios";
 
 const axiosClient = axios.create({
-  baseURL: "http://localhost:8080/api/v1",
+  baseURL: "http://localhost:9090/api/v1",
   headers: {
     "Content-Type": "application/json",
   },
@@ -354,27 +357,19 @@ axiosClient
 
 **File**: `docker-compose.yml`
 
+> ✅ Mặc định đã cấu hình sẵn, **KHÔNG cần** sửa gì nếu dùng Docker SQL Server.
+
 ```yaml
 environment:
-  # Cập nhật connection string cho SQL Server của bạn
-  - ConnectionStrings__DefaultConnection=Server=YOUR_SERVER;Database=YOUR_DATABASE;User Id=YOUR_USERNAME;Password=YOUR_PASSWORD;TrustServerCertificate=True;Encrypt=False;
-  - JwtSettings__SecretKey=your-secret-key-here
+  # SQL Server (container)
+  - ACCEPT_EULA=Y
+  - MSSQL_SA_PASSWORD=TreeShop@123
+
+  # Web API
+  - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=ShopDB;User Id=sa;Password=TreeShop@123;TrustServerCertificate=True;Encrypt=False;
+  - JwtSettings__SecretKey=iemduelqfopeiovjovmedocmelqnvvie
   - JwtSettings__Issuer=tree-shop
   - JwtSettings__Audience=tree-shop-users
-  - ASPNETCORE_ENVIRONMENT=Development
-```
-
-### Connection String Examples:
-
-```yaml
-# Local SQL Server
-- ConnectionStrings__DefaultConnection=Server=host.docker.internal;Database=TreeShopDB;User Id=sa;Password=YourPassword123!;TrustServerCertificate=True;Encrypt=False;
-
-# Remote SQL Server
-- ConnectionStrings__DefaultConnection=Server=192.168.1.100,1433;Database=TreeShopDB;User Id=sqluser;Password=YourPassword123!;TrustServerCertificate=True;Encrypt=False;
-
-# Azure SQL Database
-- ConnectionStrings__DefaultConnection=Server=yourserver.database.windows.net;Database=TreeShopDB;User Id=yourusername;Password=YourPassword123!;Encrypt=True;
 ```
 
 ---
@@ -418,7 +413,7 @@ JWT_AUDIENCE=tree-shop-users-prod
 **Kiểm tra:**
 
 - CORS đã được enable trong API chưa?
-- Sử dụng đúng IP address (không phải `localhost`)
+- Sử dụng đúng IP address (Flutter emulator → dùng `10.0.2.2`, không phải `localhost`)
 - Windows Firewall có block port không?
 - API container có đang chạy không?
 
@@ -429,36 +424,34 @@ JWT_AUDIENCE=tree-shop-users-prod
 docker ps
 
 # Xem logs của API
-docker logs treeshop-api
+docker logs TreeShop
 
-# Kiểm tra network
-docker network ls
+# Xem logs của SQL Server
+docker logs TreeShop-SqlServer
 ```
 
 #### ❌ Database connection failed
 
 **Kiểm tra:**
 
-- Connection string trong `docker-compose.yml` có đúng không?
-- SQL Server có đang chạy không?
-- Database có tồn tại không?
-- Script database đã được chạy chưa?
-
-**Giải pháp:**
-
 ```bash
-# Kiểm tra API container logs
-docker logs treeshop-api
+# Kiểm tra SQL Server đã healthy chưa
+docker ps
+# Cột STATUS phải hiện "healthy"
 
-# Restart API container
-docker compose restart
+# Xem logs SQL Server
+docker logs TreeShop-SqlServer
+
+# Restart toàn bộ
+docker compose down
+docker compose up --build
 ```
 
-> 💡 **Lưu ý**: Nếu vẫn lỗi, hãy kiểm tra SQL Server và chạy lại script database.
+> 💡 **Lưu ý**: Nếu SQL Server chưa healthy, API sẽ không start (nhờ `depends_on` + healthcheck).
 
 #### ❌ Port conflicts
 
-Nếu port 8080 hoặc 1500 đã được sử dụng:
+Nếu port 9090 hoặc 1433 đã được sử dụng:
 
 1. Dừng services đang chạy trên các port này
 2. Hoặc sửa ports trong `docker-compose.yml`
